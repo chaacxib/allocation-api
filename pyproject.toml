@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "allocation_api"
+version = "0.1.0"
+description = "Example application code based on the cosmic python book"
+authors = ["ChaacXib <chaacxib.hi@ud.me>"]
+license = "CC0 1.0 Universal"
+readme = "README.md"
+packages = [{include = "allocation_api"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pydantic = "^1.10.6"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.2.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
