@@ -1,8 +1,22 @@
+## Install for production
+install:
+	poetry install --without dev
+
+## Install for development 
+install-dev:
+	poetry install --with dev
+
+## Run tests
 test:
 	pytest --tb=short
 
+## Watch tests
 watch-tests:
 	ls *.py | entr pytest --tb=short
 
-black:
-	black -l 86 $$(find * -name '*.py')
+## Run checks (isort, black, mypy, ruff)
+check:
+	isort .
+	black .
+	mypy .
+	ruff .
