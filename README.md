@@ -7,8 +7,10 @@ Example application code based on the [cosmic python book](https://www.cosmicpyt
 - docker with docker-compose
 - for chapters 1 and 2, and optionally for the rest: [poetry](https://python-poetry.org/)
 
-## Creating a local virtualenv (optional)
+## Creating virtaul environment and installing dependencies (Optional)
 ~~~
-poetry install
-poetry shell
+make install-dev
 ~~~
+
+## Inspiration
+- [An opinionated Python boilerplate](https://duarteocarmo.com/blog/opinionated-python-boilerplate)
