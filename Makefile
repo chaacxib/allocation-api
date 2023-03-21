@@ -18,5 +18,5 @@ watch-tests:
 check:
 	isort .
 	black .
-	mypy .
+	pyright .
 	ruff .

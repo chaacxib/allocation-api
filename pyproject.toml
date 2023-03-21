@@ -8,16 +8,16 @@ readme = "README.md"
 packages = [{include = "allocation_api"}]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 pydantic = "^1.10.6"
 
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.2"
 ruff = "^0.0.256"
-mypy = "^1.1.1"
 black = "^23.1.0"
 isort = "^5.12.0"
+pyright = "^1.1.299"
 
 [build-system]
 requires = ["poetry-core"]
@@ -26,18 +26,10 @@ build-backend = "poetry.core.masonry.api"
 [tool.black]
 line-length = 120
 
+[tool.pyright]
+pythonVersion = "3.11"
+pythonPlatform = "Linux"
+typeCheckingMode = "strict"
+
 [tool.ruff]
 line-length = 120
-
-[tool.mypy]
-cache_dir = "/dev/null"
-warn_unused_configs = true
-disallow_untyped_calls = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-strict_optional = true
-warn_unused_ignores = true
-warn_return_any = true
-warn_redundant_casts = true
-ignore_missing_imports = true

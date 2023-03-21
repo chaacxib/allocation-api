@@ -24,9 +24,6 @@ class OrderLine(pydantic.BaseModel):
     class Config:
         frozen = True
 
-    def __hash__(self) -> int:
-        return hash((type(self),) + tuple(self.__dict__.values()))
-
 
 class Batch:
     """Batch of stock ordered by the purchasing department
