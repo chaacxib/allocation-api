@@ -14,7 +14,7 @@ test:
 watch-tests:
 	ls *.py | entr pytest --tb=short
 
-## Run checks (isort, black, mypy, ruff)
+## Run checks (isort, black, pyright, ruff)
 check:
 	isort .
 	black .

@@ -10,8 +10,12 @@ later = tomorrow + timedelta(days=10)
 
 
 def test_prefers_current_stock_batches_to_shipments() -> None:
-    in_stock_batch = Batch(ref="in-stock-batch", sku="RETRO-CLOCK", qty=100, eta=None)
-    shipment_batch = Batch(ref="shipment-batch", sku="RETRO-CLOCK", qty=100, eta=tomorrow)
+    in_stock_batch = Batch(
+        ref="in-stock-batch", sku="RETRO-CLOCK", qty=100, eta=None
+    )
+    shipment_batch = Batch(
+        ref="shipment-batch", sku="RETRO-CLOCK", qty=100, eta=tomorrow
+    )
     line = OrderLine(order_id="oref", sku="RETRO-CLOCK", qty=10)
 
     allocate(line, [in_stock_batch, shipment_batch])
@@ -34,8 +38,12 @@ def test_prefers_earlier_batches() -> None:
 
 
 def test_returns_allocated_batch_ref() -> None:
-    in_stock_batch = Batch(ref="in-stock-batch-ref", sku="HIGHBROW-POSTER", qty=100, eta=None)
-    shipment_batch = Batch(ref="shipment-batch-ref", sku="HIGHBROW-POSTER", qty=100, eta=tomorrow)
+    in_stock_batch = Batch(
+        ref="in-stock-batch-ref", sku="HIGHBROW-POSTER", qty=100, eta=None
+    )
+    shipment_batch = Batch(
+        ref="shipment-batch-ref", sku="HIGHBROW-POSTER", qty=100, eta=tomorrow
+    )
     line = OrderLine(order_id="oref", sku="HIGHBROW-POSTER", qty=10)
 
     allocation = allocate(line, [in_stock_batch, shipment_batch])
@@ -43,7 +51,7 @@ def test_returns_allocated_batch_ref() -> None:
 
 
 def test_raises_out_of_stock_exception_if_cannot_allocate() -> None:
-    batch = Batch("batch1", "SMALL-FORK", 10, eta=today)
+    batch = Batch(ref="batch1", sku="SMALL-FORK", qty=10, eta=today)
     allocate(OrderLine(order_id="order1", sku="SMALL-FORK", qty=10), [batch])
 
     with pytest.raises(OutOfStockError, match="SMALL-FORK"):

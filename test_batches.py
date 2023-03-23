@@ -11,7 +11,9 @@ def test_allocating_to_a_batch_reduces_the_available_quantity() -> None:
     assert batch.available_quantity == 18
 
 
-def make_batch_and_line(sku: str, batch_qty: int, line_qty: int) -> tuple[Batch, OrderLine]:
+def make_batch_and_line(
+    sku: str, batch_qty: int, line_qty: int
+) -> tuple[Batch, OrderLine]:
     return (
         Batch(ref="batch-001", sku=sku, qty=batch_qty, eta=date.today()),
         OrderLine(order_id="order-123", sku=sku, qty=line_qty),
@@ -34,8 +36,10 @@ def test_can_allocate_if_available_equal_to_required() -> None:
 
 
 def test_cannot_allocate_if_skus_do_not_match() -> None:
-    batch = Batch("batch-001", "UNCOMFORTABLE-CHAIR", 100, eta=None)
-    different_sku_line = OrderLine(order_id="order-123", sku="EXPENSIVE-TOASTER", qty=10)
+    batch = Batch(ref="batch-001", sku="UNCOMFORTABLE-CHAIR", qty=100, eta=None)
+    different_sku_line = OrderLine(
+        order_id="order-123", sku="EXPENSIVE-TOASTER", qty=10
+    )
     assert batch.can_allocate(different_sku_line) is False
 
 
