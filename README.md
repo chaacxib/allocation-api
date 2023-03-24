@@ -14,3 +14,5 @@ make install-dev
 
 ## Inspiration
 - [An opinionated Python boilerplate](https://duarteocarmo.com/blog/opinionated-python-boilerplate)
+- [Building modern Python API backends in 2022](https://sanjeevan.co.uk/blog/modern-python-backends/)
+- [Secure Docker](https://dockerseguro.ulisesgascon.com/)

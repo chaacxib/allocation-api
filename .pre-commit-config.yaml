@@ -7,25 +7,25 @@ repos:
     hooks:
       - id: isort
         name: check-imports
-        entry: isort .
+        entry: isort src/ tests/
         language: system
         types: [python]
 
       - id: black
         name: format-style
-        entry: black .
+        entry: black src/ tests/
         language: system
         types: [python]
 
       - id: pyright
         name: check-typing
-        entry: pyright .
+        entry: pyright src/ tests/
         language: system
         types: [python]
         pass_filenames: false
 
       - id: ruff
         name: linter
-        entry: ruff .
+        entry: ruff src/ tests/
         language: system
         types: [python]
