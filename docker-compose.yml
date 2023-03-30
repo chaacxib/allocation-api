@@ -7,7 +7,7 @@ services:
       dockerfile: ./Dockerfile
       args:
         LOCAL_ENVIRONMENT: true
-    command: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "5000", "--reload"]
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000", "--reload"]
     container_name: app
     ports:
       - "5000:5000"
