@@ -2,8 +2,8 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
-import model
-import repository
+from src.allocation.domain import model
+from src.allocation.repositories import sqlalchemy_repository as repository
 
 
 def test_repository_can_save_a_batch(session: Session) -> None:

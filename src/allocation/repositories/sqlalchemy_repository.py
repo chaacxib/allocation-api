@@ -1,19 +1,9 @@
-import abc
 from typing import List, Set
 
 from sqlalchemy.orm import Session
 
-import model
-
-
-class AbstractRepository(abc.ABC):
-    @abc.abstractmethod
-    def add(self, batch: model.Batch) -> None:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def get(self, reference: str) -> model.Batch:
-        raise NotImplementedError
+from src.allocation.domain import model
+from src.allocation.repositories import AbstractRepository
 
 
 class SqlAlchemyRepository(AbstractRepository):

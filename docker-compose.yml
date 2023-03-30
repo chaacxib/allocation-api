@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        LOCAL_ENVIRONMENT: true
+    command: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "5000", "--reload"]
+    container_name: app
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    volumes:
+      - "./src:/app/src"
+    networks:
+      - allocations-network
+    depends_on:
+      - db
+
+  db:
+    restart: always
+    image: mysql:8.0.32-debian
+    container_name: db
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_TCP_PORT=${APP_DATABASE__PORT}
+      - MYSQL_DATABASE=${APP_DATABASE__DATABASE}
+      - MYSQL_USER=${APP_DATABASE__USER}
+      - MYSQL_PASSWORD=${APP_DATABASE__PASSWORD}
+    networks:
+      - allocations-network
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - allocations-network
+
+networks:
+  allocations-network:
+    name: allocations-network

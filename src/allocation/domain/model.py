@@ -5,7 +5,7 @@ import pydantic
 from pydantic.dataclasses import dataclass
 
 
-class OutOfStockError(Exception):
+class OutOfStockException(Exception):
     """Raise when there's no stock to allocate an order"""
 
 
@@ -126,4 +126,4 @@ def allocate(line: OrderLine, batches: List[Batch]) -> str:
         batch.allocate(line)
         return batch.reference
     except StopIteration as err:
-        raise OutOfStockError(f"Out of stock for sku {line.sku}") from err
+        raise OutOfStockException(f"Out of stock for sku {line.sku}") from err
