@@ -9,6 +9,10 @@ class _ProjectSettings(pydantic.BaseModel):
     version: str = "0.1.0"
     description: str = "Example application code based on the cosmic python book"
 
+    redoc_url: Optional[str] = None
+    docs_url: Optional[str] = None
+    openapi_url: Optional[str] = None
+
 
 class _CorsSettings(pydantic.BaseModel):
     allow_credentials: bool = True
@@ -53,6 +57,12 @@ class _Settings(pydantic.BaseSettings):
         env_prefix = "app_"
         env_nested_delimiter = "__"
 
+    def configure_environment(self) -> None:
+        if self.is_local_environment:
+            self.project.docs_url = "/docs"
+            self.project.redoc_url = "/redoc"
+            self.project.openapi_url = "/openapi.json"
+
 
 @lru_cache()
 def get_settings() -> _Settings:
@@ -62,4 +72,6 @@ def get_settings() -> _Settings:
     Returns:
         Settings: The instantiated Settings object
     """
-    return _Settings()
+    _settings = _Settings()
+    _settings.configure_environment()
+    return _settings

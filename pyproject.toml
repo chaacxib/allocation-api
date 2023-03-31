@@ -27,6 +27,9 @@ black = "^23.1.0"
 isort = "^5.12.0"
 pyright = "^1.1.299"
 rich = "^13.3.2"
+httpx = "^0.23.3"
+mock = "^5.0.1"
+pytest-mock = "^3.10.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -49,3 +52,9 @@ stubPath = "./.typings"
 
 [tool.ruff]
 line-length = 85
+
+[tool.pytest.ini_options]
+addopts = "--strict-markers"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
