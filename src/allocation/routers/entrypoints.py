@@ -20,6 +20,6 @@ async def allocate(payload: model.OrderLine) -> Dict[str, Any]:
     try:
         batch_ref = service.allocate(line=payload, repo=repo, session=session)
     except (model.OutOfStockException, service.InvalidSkuException) as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
     return {"batch_ref": batch_ref}
