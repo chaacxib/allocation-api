@@ -3,14 +3,16 @@ from contextlib import asynccontextmanager
 import structlog
 from fastapi import FastAPI
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
 
 from src.allocation.adapters import orm
 from src.allocation.lib import settings
 
 _SETTINGS = settings.get_settings()
 
-get_session = sessionmaker(bind=create_engine(url=_SETTINGS.database.mysql_uri))
+
+def get_session() -> Session:
+    return sessionmaker(bind=create_engine(url=_SETTINGS.database.mysql_uri))()
 
 
 @asynccontextmanager

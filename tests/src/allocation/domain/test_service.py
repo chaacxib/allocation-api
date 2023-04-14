@@ -2,43 +2,93 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from src.allocation.domain import model, service
-from src.allocation.repositories import sqlalchemy_repository
+
+@patch("sqlalchemy.orm.Session.commit")
+def test_add_batch(mock_session_commit: Mock) -> None:
+    from sqlalchemy.orm import Session
+
+    from src.allocation.domain import service
+    from src.allocation.domain.model import dto
+    from src.allocation.repositories import sqlalchemy_repository
+
+    repo = sqlalchemy_repository.FakeRepository(set())
+
+    service.add_batch(
+        repo=repo,
+        session=Session(),
+        dto=dto.BatchInput(ref="b1", sku="CRUNCHY-ARMCHAIR", qty=100, eta=None),
+    )
+    assert repo.get("b1") is not None
+    mock_session_commit.assert_called_once
 
 
 @patch("sqlalchemy.orm.Session.commit")
-def test_returns_allocation(mock_session_commit: Mock) -> None:
+def test_allocate_returns_allocation(mock_session_commit: Mock) -> None:
     from sqlalchemy.orm import Session
 
-    line = model.OrderLine(order_id="o1", sku="COMPLICATED-LAMP", qty=10)
-    batch = model.Batch(ref="b1", sku="COMPLICATED-LAMP", qty=100, eta=None)
-    repo = sqlalchemy_repository.FakeRepository({batch})
+    from src.allocation.domain import service
+    from src.allocation.domain.model import dto
+    from src.allocation.repositories import sqlalchemy_repository
 
-    result = service.allocate(line, repo, Session())
-    assert result == "b1"
+    repo = sqlalchemy_repository.FakeRepository(set())
+    service.add_batch(
+        repo=repo,
+        session=Session(),
+        dto=dto.BatchInput(ref="batch1", sku="COMPLICATED-LAMP", qty=100, eta=None),
+    )
+
+    result = service.allocate(
+        repo=repo,
+        session=Session(),
+        dto=dto.OrderLineInput(sku="COMPLICATED-LAMP", order_id="o1", qty=10),
+    )
+    assert result == "batch1"
 
 
 @patch("sqlalchemy.orm.Session.commit")
-def test_error_for_invalid_sku(mock_session_commit: Mock) -> None:
+def test_allocate_errors_for_invalid_sku(mock_session_commit: Mock) -> None:
     from sqlalchemy.orm import Session
 
-    line = model.OrderLine(order_id="o1", sku="NONEXISTENTSKU", qty=10)
-    batch = model.Batch(ref="b1", sku="AREALSKU", qty=100, eta=None)
-    repo = sqlalchemy_repository.FakeRepository({batch})
+    from src.allocation.domain import service
+    from src.allocation.domain.model import dto
+    from src.allocation.repositories import sqlalchemy_repository
+
+    repo = sqlalchemy_repository.FakeRepository(set())
+    service.add_batch(
+        repo=repo,
+        session=Session(),
+        dto=dto.BatchInput(ref="b1", sku="AREALSKU", qty=100, eta=None),
+    )
 
     with pytest.raises(
         service.InvalidSkuException, match="Invalid sku NONEXISTENTSKU"
     ):
-        service.allocate(line, repo, Session())
+        service.allocate(
+            repo=repo,
+            session=Session(),
+            dto=dto.OrderLineInput(sku="NONEXISTENTSKU", order_id="o1", qty=10),
+        )
 
 
 @patch("sqlalchemy.orm.Session.commit")
 def test_commits(mock_session_commit: Mock) -> None:
     from sqlalchemy.orm import Session
 
-    line = model.OrderLine(order_id="o1", sku="OMINOUS-MIRROR", qty=10)
-    batch = model.Batch(ref="b1", sku="OMINOUS-MIRROR", qty=100, eta=None)
-    repo = sqlalchemy_repository.FakeRepository({batch})
+    from src.allocation.domain import service
+    from src.allocation.domain.model import dto
+    from src.allocation.repositories import sqlalchemy_repository
 
-    service.allocate(line, repo, Session())
+    repo = sqlalchemy_repository.FakeRepository(set())
+
+    service.add_batch(
+        repo=repo,
+        session=Session(),
+        dto=dto.BatchInput(ref="b1", sku="OMINOUS-MIRROR", qty=100, eta=None),
+    )
+    service.allocate(
+        repo=repo,
+        session=Session(),
+        dto=dto.OrderLineInput(sku="OMINOUS-MIRROR", order_id="o1", qty=10),
+    )
+
     mock_session_commit.assert_called_once
