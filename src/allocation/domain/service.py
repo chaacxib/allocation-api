@@ -5,6 +5,7 @@ from typing import List
 from sqlalchemy.orm import Session
 
 from src.allocation.domain import model
+from src.allocation.domain.model import dto
 from src.allocation.repositories import AbstractRepository
 
 
@@ -27,8 +28,17 @@ def is_valid_sku(sku: str, batches: List[model.Batch]) -> bool:
     return sku in {b.sku for b in batches}
 
 
+def add_batch(
+    dto: dto.BatchInput,
+    repo: AbstractRepository,
+    session: Session,
+) -> None:
+    repo.add(model.Batch(**dto.dict()))
+    session.commit()
+
+
 def allocate(
-    line: model.OrderLine, repo: AbstractRepository, session: Session
+    dto: dto.OrderLineInput, repo: AbstractRepository, session: Session
 ) -> str:
     """Service to allocate an order and persist the data
 
@@ -44,8 +54,8 @@ def allocate(
         batch_ref (str): Reference of the batch where the order is allocated
     """
     batches = repo.list()
-    if not is_valid_sku(line.sku, batches):
-        raise InvalidSkuException(f"Invalid sku {line.sku}")
-    batch_ref = model.allocate(line, batches)
+    if not is_valid_sku(dto.sku, batches):
+        raise InvalidSkuException(f"Invalid sku {dto.sku}")
+    batch_ref = model.allocate(line=model.OrderLine(**dto.dict()), batches=batches)
     session.commit()
     return batch_ref
