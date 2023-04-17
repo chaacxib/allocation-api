@@ -3,13 +3,11 @@ from typing import Any, Generator
 
 import httpx
 import pytest
-from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, clear_mappers, sessionmaker
 
 from src.allocation.adapters.orm import metadata, start_mappers
-from src.main import app
 
 _TEST_DB_FILE: str = ".pytest_cache/sqlite_db.db"
 
@@ -31,6 +29,15 @@ def file_db() -> Generator[Engine, None, None]:
 
 
 @pytest.fixture
+def session_factory(
+    in_memory_db: Engine,
+) -> Generator[sessionmaker[Session], None, None]:
+    start_mappers()
+    yield sessionmaker(bind=in_memory_db)
+    clear_mappers()
+
+
+@pytest.fixture
 def session(in_memory_db: Engine) -> Generator[Session, None, None]:
     start_mappers()
     yield sessionmaker(bind=in_memory_db)()
@@ -46,6 +53,10 @@ def file_session(file_db: Engine) -> Generator[Session, None, None]:
 
 @pytest.fixture
 def client() -> httpx.Client:
+    from fastapi.testclient import TestClient
+
+    from src.main import app
+
     return TestClient(app=app)
 
 

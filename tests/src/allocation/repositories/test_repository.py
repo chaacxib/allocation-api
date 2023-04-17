@@ -6,21 +6,6 @@ from src.allocation.domain import model
 from src.allocation.repositories import sqlalchemy_repository as repository
 
 
-def test_repository_can_save_a_batch(session: Session) -> None:
-    batch = model.Batch(ref="batch1", sku="RUSTY-SOAPDISH", qty=100, eta=None)
-
-    repo = repository.SqlAlchemyRepository(session)
-    repo.add(batch)
-    session.commit()
-
-    rows = session.execute(
-        statement=text(
-            'SELECT reference, sku, _purchased_quantity, eta FROM "batches"'
-        )
-    )
-    assert list(rows) == [("batch1", "RUSTY-SOAPDISH", 100, None)]
-
-
 def insert_order_line(session: Session) -> int:
     session.execute(
         statement=text(
@@ -62,6 +47,21 @@ def insert_allocation(session: Session, orderline_id: int, batch_id: str) -> Non
         ),
         params=dict(orderline_id=orderline_id, batch_id=batch_id),
     )
+
+
+def test_repository_can_save_a_batch(session: Session) -> None:
+    batch = model.Batch(ref="batch1", sku="RUSTY-SOAPDISH", qty=100, eta=None)
+
+    repo = repository.SqlAlchemyRepository(session)
+    repo.add(batch)
+    session.commit()
+
+    rows = session.execute(
+        statement=text(
+            'SELECT reference, sku, _purchased_quantity, eta FROM "batches"'
+        )
+    )
+    assert list(rows) == [("batch1", "RUSTY-SOAPDISH", 100, None)]
 
 
 def test_repository_can_retrieve_a_batch_with_allocations(session: Session) -> None:
