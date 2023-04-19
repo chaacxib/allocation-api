@@ -1,5 +1,5 @@
 import os
-from typing import Any, Generator
+from typing import Generator
 
 import httpx
 import pytest
@@ -38,6 +38,15 @@ def session_factory(
 
 
 @pytest.fixture
+def file_session_factory(
+    file_db: Engine,
+) -> Generator[sessionmaker[Session], None, None]:
+    start_mappers()
+    yield sessionmaker(bind=file_db)
+    clear_mappers()
+
+
+@pytest.fixture
 def session(in_memory_db: Engine) -> Generator[Session, None, None]:
     start_mappers()
     yield sessionmaker(bind=in_memory_db)()
@@ -45,25 +54,18 @@ def session(in_memory_db: Engine) -> Generator[Session, None, None]:
 
 
 @pytest.fixture
-def file_session(file_db: Engine) -> Generator[Session, None, None]:
-    start_mappers()
-    yield sessionmaker(bind=file_db)()
-    clear_mappers()
-
-
-@pytest.fixture
-def client() -> httpx.Client:
+def client(file_session_factory: sessionmaker[Session]) -> httpx.Client:
     from fastapi.testclient import TestClient
 
+    from src.allocation.adapters import unit_of_work
+    from src.allocation.lib.config import get_default_uow
     from src.main import app
 
+    def get_default_uow_override() -> unit_of_work.AbstractUnitOfWork:
+        return unit_of_work.SqlAlchemyUnitOfWork(
+            session_factory=file_session_factory
+        )
+
+    app.dependency_overrides[get_default_uow] = get_default_uow_override
+
     return TestClient(app=app)
-
-
-@pytest.fixture
-def mock_get_db_session(mocker: Any, file_session: Session) -> None:
-    mocker.patch(
-        "src.allocation.lib.settings._DatabaseSettings.mysql_uri",
-        new_callable=mocker.PropertyMock,
-        return_value=f"sqlite:///{_TEST_DB_FILE}",
-    )
