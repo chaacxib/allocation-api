@@ -2,17 +2,15 @@ from contextlib import asynccontextmanager
 
 import structlog
 from fastapi import FastAPI
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
 
-from src.allocation.adapters import orm
+from src.allocation.adapters import orm, unit_of_work
 from src.allocation.lib import settings
 
 _SETTINGS = settings.get_settings()
 
 
-def get_session() -> Session:
-    return sessionmaker(bind=create_engine(url=_SETTINGS.database.mysql_uri))()
+def get_default_uow() -> unit_of_work.AbstractUnitOfWork:
+    return unit_of_work.SqlAlchemyUnitOfWork()
 
 
 @asynccontextmanager

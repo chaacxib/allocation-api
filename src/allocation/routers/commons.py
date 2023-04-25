@@ -1,7 +1,10 @@
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import Depends
 
-from src.allocation.lib.config import get_session
+from src.allocation.adapters import unit_of_work
+from src.allocation.lib import config
 
-GetDBSession = Annotated[Any, Depends(get_session)]
+DefaultUnitOfWork = Annotated[
+    unit_of_work.AbstractUnitOfWork, Depends(config.get_default_uow)
+]

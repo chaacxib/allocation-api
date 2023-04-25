@@ -2,7 +2,6 @@ import uuid
 from typing import Any, Dict, Optional
 
 import httpx
-import pytest
 
 
 def random_suffix() -> str:
@@ -30,7 +29,6 @@ def post_to_add_batch(
     assert result.status_code == 201
 
 
-@pytest.mark.usefixtures("mock_get_db_session")
 def test_happy_path_returns_201_and_allocated_batch(client: httpx.Client) -> None:
     sku, othersku = random_sku(), random_sku("other")
     earlybatch = random_batchref("1")
@@ -52,7 +50,6 @@ def test_happy_path_returns_201_and_allocated_batch(client: httpx.Client) -> Non
     assert result_data.get("batch_ref") == earlybatch
 
 
-@pytest.mark.usefixtures("mock_get_db_session")
 def test_unhappy_path_returns_400_and_error_message(client: httpx.Client) -> None:
     unknown_sku, orderid = random_sku(), random_orderid()
     data = {"order_id": orderid, "sku": unknown_sku, "qty": 20}
