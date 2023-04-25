@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session, clear_mappers, sessionmaker
 
 from src.allocation.adapters.orm import metadata, start_mappers
 
-_TEST_DB_FILE: str = "test_sqlite_db.db"
+_TEST_DB_FILE: str = ".pytest_cache/test_sqlite_db.db"
 
 
 @pytest.fixture
