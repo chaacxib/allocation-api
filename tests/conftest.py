@@ -1,5 +1,5 @@
-# import os
-from typing import Generator
+import os
+from typing import Generator, Union
 
 import httpx
 import pytest
@@ -24,8 +24,6 @@ def file_db() -> Generator[Engine, None, None]:
     engine = create_engine(f"sqlite:///{_TEST_DB_FILE}")
     metadata.create_all(engine)
     yield engine
-    # if os.path.exists(_TEST_DB_FILE):
-    #     os.remove(_TEST_DB_FILE)
 
 
 @pytest.fixture
@@ -69,3 +67,10 @@ def client(file_session_factory: sessionmaker[Session]) -> httpx.Client:
     app.dependency_overrides[get_default_uow] = get_default_uow_override
 
     return TestClient(app=app)
+
+
+def pytest_sessionfinish(
+    session: pytest.Session, exitstatus: Union[int, pytest.ExitCode]
+) -> None:
+    if os.path.exists(_TEST_DB_FILE):
+        os.remove(_TEST_DB_FILE)
