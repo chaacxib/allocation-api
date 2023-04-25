@@ -1,4 +1,4 @@
-import os
+# import os
 from typing import Generator
 
 import httpx
@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session, clear_mappers, sessionmaker
 
 from src.allocation.adapters.orm import metadata, start_mappers
 
-_TEST_DB_FILE: str = ".pytest_cache/sqlite_db.db"
+_TEST_DB_FILE: str = "test_sqlite_db.db"
 
 
 @pytest.fixture
@@ -24,8 +24,8 @@ def file_db() -> Generator[Engine, None, None]:
     engine = create_engine(f"sqlite:///{_TEST_DB_FILE}")
     metadata.create_all(engine)
     yield engine
-    if os.path.exists(_TEST_DB_FILE):
-        os.remove(_TEST_DB_FILE)
+    # if os.path.exists(_TEST_DB_FILE):
+    #     os.remove(_TEST_DB_FILE)
 
 
 @pytest.fixture

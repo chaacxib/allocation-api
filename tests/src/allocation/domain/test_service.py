@@ -2,7 +2,7 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_add_batch() -> None:
+async def test_add_batch_for_new_product() -> None:
     from src.allocation.adapters import unit_of_work
     from src.allocation.domain import service
     from src.allocation.domain.model import dto
@@ -13,8 +13,29 @@ async def test_add_batch() -> None:
         uow=uow,
         dto=dto.BatchInput(ref="b1", sku="CRUNCHY-ARMCHAIR", qty=100, eta=None),
     )
-    assert uow.batches.get("b1") is not None
+    assert uow.products.get("CRUNCHY-ARMCHAIR") is not None
     assert uow.committed
+
+
+@pytest.mark.asyncio
+async def test_add_batch_for_existing_product() -> None:
+    from src.allocation.adapters import unit_of_work
+    from src.allocation.domain import service
+    from src.allocation.domain.model import dto
+
+    uow = unit_of_work.FakeUnitOfWork()
+
+    await service.add_batch(
+        uow=uow,
+        dto=dto.BatchInput(ref="b1", sku="GARISH-RUG", qty=100, eta=None),
+    )
+    await service.add_batch(
+        uow=uow,
+        dto=dto.BatchInput(ref="b2", sku="GARISH-RUG", qty=99, eta=None),
+    )
+    _product = uow.products.get("GARISH-RUG")
+    assert _product is not None
+    assert "b2" in [b.id for b in _product.batches]
 
 
 @pytest.mark.asyncio

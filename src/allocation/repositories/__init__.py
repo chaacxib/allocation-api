@@ -1,18 +1,11 @@
-import abc
-from typing import List
+from src.allocation.repositories.abstract import AbstractRepository
+from src.allocation.repositories.sqlalchemy_repository import (
+    FakeRepository,
+    SqlAlchemyRepository,
+)
 
-from src.allocation.domain import model
-
-
-class AbstractRepository(abc.ABC):
-    @abc.abstractmethod
-    def add(self, batch: model.Batch) -> None:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def get(self, reference: str) -> model.Batch:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def list(self) -> List[model.Batch]:
-        raise NotImplementedError
+__all__ = [
+    "AbstractRepository",
+    "SqlAlchemyRepository",
+    "FakeRepository",
+]

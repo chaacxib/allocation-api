@@ -1,11 +1,16 @@
 from datetime import date
 
-from src.allocation.domain.model import Batch, OrderLine
+from src.allocation.domain.model import aggregate
 
 
 def test_allocating_to_a_batch_reduces_the_available_quantity() -> None:
-    batch = Batch(ref="batch-001", sku="SMALL-TABLE", qty=20, eta=date.today())
-    line = OrderLine(order_id="order-ref", sku="SMALL-TABLE", qty=2)
+    batch = aggregate.Batch(
+        id="batch-001",
+        sku="SMALL-TABLE",
+        purchased_quantity=20,
+        eta=date.today(),
+    )
+    line = aggregate.OrderLine(order_id="order-ref", sku="SMALL-TABLE", qty=2)
 
     batch.allocate(line)
     assert batch.available_quantity == 18
@@ -13,10 +18,15 @@ def test_allocating_to_a_batch_reduces_the_available_quantity() -> None:
 
 def make_batch_and_line(
     sku: str, batch_qty: int, line_qty: int
-) -> tuple[Batch, OrderLine]:
+) -> tuple[aggregate.Batch, aggregate.OrderLine]:
     return (
-        Batch(ref="batch-001", sku=sku, qty=batch_qty, eta=date.today()),
-        OrderLine(order_id="order-123", sku=sku, qty=line_qty),
+        aggregate.Batch(
+            id="batch-001",
+            sku=sku,
+            purchased_quantity=batch_qty,
+            eta=date.today(),
+        ),
+        aggregate.OrderLine(order_id="order-123", sku=sku, qty=line_qty),
     )
 
 
@@ -36,8 +46,13 @@ def test_can_allocate_if_available_equal_to_required() -> None:
 
 
 def test_cannot_allocate_if_skus_do_not_match() -> None:
-    batch = Batch(ref="batch-001", sku="UNCOMFORTABLE-CHAIR", qty=100, eta=None)
-    different_sku_line = OrderLine(
+    batch = aggregate.Batch(
+        id="batch-001",
+        sku="UNCOMFORTABLE-CHAIR",
+        purchased_quantity=100,
+        eta=None,
+    )
+    different_sku_line = aggregate.OrderLine(
         order_id="order-123", sku="EXPENSIVE-TOASTER", qty=10
     )
     assert batch.can_allocate(different_sku_line) is False

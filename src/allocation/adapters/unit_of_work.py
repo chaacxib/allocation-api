@@ -6,18 +6,20 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from src.allocation import repositories
 from src.allocation.lib import settings
-from src.allocation.repositories import sqlalchemy_repository as repository
 
 SessionFactory = Annotated[sessionmaker[Session], sessionmaker]
 
 _SETTINGS = settings.get_settings()
 DEFAULT_SESSION_FACTORY: SessionFactory = sessionmaker(
-    bind=create_engine(url=_SETTINGS.database.mysql_uri)
+    bind=create_engine(
+        url=_SETTINGS.database.mysql_uri,
+        isolation_level="REPEATABLE READ",
+    )
 )
 
 
 class AbstractUnitOfWork(abc.ABC):
-    batches: repositories.AbstractRepository
+    products: repositories.AbstractRepository
 
     async def __aenter__(self) -> "AbstractUnitOfWork":
         return self
@@ -43,7 +45,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 
     async def __aenter__(self) -> AbstractUnitOfWork:
         self.session: Session = self.session_factory()
-        self.batches = repository.SqlAlchemyRepository(session=self.session)
+        self.products = repositories.SqlAlchemyRepository(session=self.session)
         return await super().__aenter__()
 
     async def __exit__(self, *args: Any) -> None:
@@ -59,7 +61,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 
 class FakeUnitOfWork(AbstractUnitOfWork):
     def __init__(self) -> None:
-        self.batches = repository.FakeRepository(set())
+        self.products = repositories.FakeRepository(set())
         self.committed = False
         super().__init__()
 
