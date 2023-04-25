@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 
-from src.allocation.domain import model, service
-from src.allocation.domain.model import dto
+from src.allocation.domain import service
+from src.allocation.domain.model import aggregate, dto
 from src.allocation.routers import commons
 
 app_router = APIRouter(prefix="/batches", tags=["Batches"])
@@ -29,7 +29,7 @@ async def allocate(
 ) -> dto.OrderLineOutput:
     try:
         batch_ref = await service.allocate(uow=uow, dto=payload)
-    except (model.OutOfStockException, service.InvalidSkuException) as e:
+    except (aggregate.OutOfStockException, service.InvalidSkuException) as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
     return dto.OrderLineOutput(batch_ref=batch_ref)

@@ -5,15 +5,26 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
 from src.allocation.adapters import unit_of_work
-from src.allocation.domain import model
+from src.allocation.domain.model import aggregate
 
 
 def insert_batch(
-    session: Session, ref: str, sku: str, qty: int, eta: Optional[str]
+    session: Session,
+    ref: str,
+    sku: str,
+    qty: int,
+    eta: Optional[str],
+    product_version: int = 1,
 ) -> None:
     session.execute(
         statement=text(
-            "INSERT INTO batches (reference, sku, _purchased_quantity, eta)"
+            "INSERT INTO products (sku, version_number) VALUES (:sku, :version)",
+        ),
+        params=dict(sku=sku, version=product_version),
+    )
+    session.execute(
+        statement=text(
+            "INSERT INTO batches (id, sku, purchased_quantity, eta)"
             " VALUES (:ref, :sku, :qty, :eta)",
         ),
         params=dict(ref=ref, sku=sku, qty=qty, eta=eta),
@@ -29,7 +40,7 @@ def get_allocated_batch_ref(session: Session, order_id: str, sku: str) -> str:
     )
     [[batch_ref]] = session.execute(
         statement=text(
-            "SELECT b.reference FROM allocations JOIN batches"
+            "SELECT b.id FROM allocations JOIN batches"
             " AS b ON batch_id = b.id"
             " WHERE orderline_id=:order_line_id",
         ),
@@ -50,9 +61,11 @@ async def test_uow_can_retrieve_a_batch_and_allocate_to_it(
 
     uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory=session_factory)
     async with uow:
-        batch = uow.batches.get(reference="batch1")
-        batch.allocate(
-            line=model.OrderLine(order_id="o1", sku="HIPSTER-WORKBENCH", qty=10)
+        product = uow.products.get(sku="HIPSTER-WORKBENCH")
+        if not product:
+            raise aggregate.OutOfStockException()
+        product.allocate(
+            line=aggregate.OrderLine(order_id="o1", sku="HIPSTER-WORKBENCH", qty=10)
         )
         await uow.commit()
 

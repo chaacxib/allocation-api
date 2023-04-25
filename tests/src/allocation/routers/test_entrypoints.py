@@ -1,23 +1,8 @@
-import uuid
 from typing import Any, Dict, Optional
 
 import httpx
 
-
-def random_suffix() -> str:
-    return uuid.uuid4().hex[:6]
-
-
-def random_sku(name: str = "") -> str:
-    return f"sku-{name}-{random_suffix()}"
-
-
-def random_batchref(name: str = "") -> str:
-    return f"batch-{name}-{random_suffix()}"
-
-
-def random_orderid(name: str = "") -> str:
-    return f"order-{name}-{random_suffix()}"
+from tests import random_refs
 
 
 def post_to_add_batch(
@@ -30,10 +15,10 @@ def post_to_add_batch(
 
 
 def test_happy_path_returns_201_and_allocated_batch(client: httpx.Client) -> None:
-    sku, othersku = random_sku(), random_sku("other")
-    earlybatch = random_batchref("1")
-    laterbatch = random_batchref("2")
-    otherbatch = random_batchref("3")
+    sku, othersku = random_refs.random_sku(), random_refs.random_sku("other")
+    earlybatch = random_refs.random_batchref("1")
+    laterbatch = random_refs.random_batchref("2")
+    otherbatch = random_refs.random_batchref("3")
     post_to_add_batch(
         client=client, ref=laterbatch, sku=sku, qty=100, eta="2011-01-02"
     )
@@ -42,7 +27,7 @@ def test_happy_path_returns_201_and_allocated_batch(client: httpx.Client) -> Non
     )
     post_to_add_batch(client=client, ref=otherbatch, sku=othersku, qty=100, eta=None)
 
-    data = {"order_id": random_orderid(), "sku": sku, "qty": 3}
+    data = {"order_id": random_refs.random_orderid(), "sku": sku, "qty": 3}
     result = client.post("/api/batches/allocate/", json=data)
     result_data: Dict[str, Any] = result.json()
 
@@ -51,7 +36,7 @@ def test_happy_path_returns_201_and_allocated_batch(client: httpx.Client) -> Non
 
 
 def test_unhappy_path_returns_400_and_error_message(client: httpx.Client) -> None:
-    unknown_sku, orderid = random_sku(), random_orderid()
+    unknown_sku, orderid = random_refs.random_sku(), random_refs.random_orderid()
     data = {"order_id": orderid, "sku": unknown_sku, "qty": 20}
     result = client.post("/api/batches/allocate/", json=data)
     result_data: Dict[str, Any] = result.json()

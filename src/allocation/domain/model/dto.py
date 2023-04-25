@@ -28,19 +28,21 @@ class OrderLineOutput(pydantic.BaseModel):
 
 
 class BatchInput(pydantic.BaseModel):
-    ref: str = pydantic.Field(
+    reference: str = pydantic.Field(
         ...,
         title="Reference",
         description="Unique identifier for the batch order",
+        alias="ref",
     )
     sku: str = pydantic.Field(
         ..., title="Stock-Keeping Unit", description="Unique product identifier"
     )
-    qty: int = pydantic.Field(
+    purchased_quantity: int = pydantic.Field(
         ...,
         title="Quantity",
         description="Number of product units for the batch order",
         gt=0,
+        alias="qty",
     )
     eta: Optional[date] = pydantic.Field(
         None,

@@ -1,7 +1,7 @@
-fail_fast: false
+fail_fast: true
 files: '^.*\.py$'
 default_language_version:
-  python: python3.10
+  python: python3.11
 repos:
   - repo: local
     hooks:
