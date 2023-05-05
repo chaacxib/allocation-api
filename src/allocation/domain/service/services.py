@@ -1,5 +1,7 @@
-from src.allocation.adapters import unit_of_work
+from typing import Optional
+
 from src.allocation.domain.model import aggregate, dto
+from src.allocation.domain.service import unit_of_work
 
 
 class InvalidSkuException(Exception):
@@ -36,7 +38,7 @@ async def add_batch(
 async def allocate(
     dto: dto.OrderLineInput,
     uow: unit_of_work.AbstractUnitOfWork,
-) -> str:
+) -> Optional[str]:
     """Service to allocate an order and persist the data
 
     Args:

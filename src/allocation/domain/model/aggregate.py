@@ -5,6 +5,7 @@ from typing import List, Optional, Set
 import pydantic
 from pydantic.dataclasses import dataclass as pydantic_dataclass
 
+from src.allocation.domain.model import events as domain_events
 from src.allocation.lib import base_types
 
 
@@ -122,6 +123,9 @@ class Product(base_types.Aggregate):
     sku: str
     batches: List[Batch] = dataclasses.field(default_factory=lambda: list())
     version_number: int = dataclasses.field(default=0)
+    events: List[domain_events.Event] = dataclasses.field(
+        default_factory=lambda: list()
+    )
 
     def __hash__(self) -> int:
         return hash(self.__class__) + hash(self.sku)
@@ -129,7 +133,7 @@ class Product(base_types.Aggregate):
     def add_batch(self, batch: Batch) -> None:
         self.batches.append(batch)
 
-    def allocate(self, line: OrderLine) -> str:
+    def allocate(self, line: OrderLine) -> Optional[str]:
         """Allocates a new order on the nearest available stock batch order
 
         Args:
@@ -152,7 +156,8 @@ class Product(base_types.Aggregate):
 
             return batch.id
         except StopIteration:
-            raise OutOfStockException(f"Out of stock for sku {line.sku}")
+            self.events.append(domain_events.OutOfStock(sku=line.sku))
+            return None
 
     def _update_version(self) -> None:
         self.version_number += 1

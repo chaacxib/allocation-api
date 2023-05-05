@@ -4,8 +4,8 @@ import pytest
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
-from src.allocation.adapters import unit_of_work
 from src.allocation.domain.model import aggregate
+from src.allocation.domain.service import unit_of_work
 
 
 def insert_batch(

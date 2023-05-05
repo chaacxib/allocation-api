@@ -1,5 +1,5 @@
-import os
-from typing import Generator, Union
+import uuid
+from typing import Generator
 
 import httpx
 import pytest
@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session, clear_mappers, sessionmaker
 
 from src.allocation.adapters.orm import metadata, start_mappers
 
-_TEST_DB_FILE: str = ".pytest_cache/test_sqlite_db.db"
+_TEST_DB_FILE_NAME: str = "_test-sqlite-db"
 
 
 @pytest.fixture
@@ -20,8 +20,10 @@ def in_memory_db() -> Engine:
 
 
 @pytest.fixture
-def file_db() -> Generator[Engine, None, None]:
-    engine = create_engine(f"sqlite:///{_TEST_DB_FILE}")
+def file_db(tmpdir: str) -> Generator[Engine, None, None]:
+    engine = create_engine(
+        f"sqlite:///{tmpdir}/{_TEST_DB_FILE_NAME}-{uuid.uuid4()}.db"
+    )
     metadata.create_all(engine)
     yield engine
 
@@ -55,7 +57,7 @@ def session(in_memory_db: Engine) -> Generator[Session, None, None]:
 def client(file_session_factory: sessionmaker[Session]) -> httpx.Client:
     from fastapi.testclient import TestClient
 
-    from src.allocation.adapters import unit_of_work
+    from src.allocation.domain.service import unit_of_work
     from src.allocation.lib.config import get_default_uow
     from src.main import app
 
@@ -67,10 +69,3 @@ def client(file_session_factory: sessionmaker[Session]) -> httpx.Client:
     app.dependency_overrides[get_default_uow] = get_default_uow_override
 
     return TestClient(app=app)
-
-
-def pytest_sessionfinish(
-    session: pytest.Session, exitstatus: Union[int, pytest.ExitCode]
-) -> None:
-    if os.path.exists(_TEST_DB_FILE):
-        os.remove(_TEST_DB_FILE)
