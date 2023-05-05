@@ -9,8 +9,6 @@ from sqlalchemy.orm import Session, clear_mappers, sessionmaker
 
 from src.allocation.adapters.orm import metadata, start_mappers
 
-_TEST_DB_FILE_NAME: str = "_test-sqlite-db"
-
 
 @pytest.fixture
 def in_memory_db() -> Engine:
@@ -21,9 +19,7 @@ def in_memory_db() -> Engine:
 
 @pytest.fixture
 def file_db(tmpdir: str) -> Generator[Engine, None, None]:
-    engine = create_engine(
-        f"sqlite:///{tmpdir}/{_TEST_DB_FILE_NAME}-{uuid.uuid4()}.db"
-    )
+    engine = create_engine(f"sqlite:///{tmpdir}/test-{uuid.uuid4()}.db")
     metadata.create_all(engine)
     yield engine
 
