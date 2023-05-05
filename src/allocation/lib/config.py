@@ -3,7 +3,8 @@ from contextlib import asynccontextmanager
 import structlog
 from fastapi import FastAPI
 
-from src.allocation.adapters import orm, unit_of_work
+from src.allocation.adapters import orm
+from src.allocation.domain.service import unit_of_work
 from src.allocation.lib import settings
 
 _SETTINGS = settings.get_settings()

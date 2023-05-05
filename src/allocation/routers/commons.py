@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from src.allocation.adapters import unit_of_work
+from src.allocation.domain.service import unit_of_work
 from src.allocation.lib import config
 
 DefaultUnitOfWork = Annotated[

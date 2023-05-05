@@ -20,8 +20,7 @@ class OrderLineInput(pydantic.BaseModel):
 
 
 class OrderLineOutput(pydantic.BaseModel):
-    batch_ref: str = pydantic.Field(
-        ...,
+    batch_ref: Optional[str] = pydantic.Field(
         title="Batch reference",
         description="Unique identifier for the batch where the order was allocated",
     )

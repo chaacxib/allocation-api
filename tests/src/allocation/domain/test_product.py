@@ -85,6 +85,7 @@ def test_returns_allocated_batch_ref() -> None:
     assert allocation == in_stock_batch.id
 
 
+@pytest.mark.skip
 def test_raises_out_of_stock_exception_if_cannot_allocate() -> None:
     batch = aggregate.Batch(
         id="batch1", sku="SMALL-FORK", purchased_quantity=10, eta=today
@@ -99,6 +100,25 @@ def test_raises_out_of_stock_exception_if_cannot_allocate() -> None:
         product.allocate(
             aggregate.OrderLine(order_id="order2", sku="SMALL-FORK", qty=1)
         )
+
+
+def test_records_out_of_stock_event_if_cannot_allocate() -> None:
+    from src.allocation.domain.model import events
+
+    batch = aggregate.Batch(
+        id="batch1", sku="SMALL-FORK", purchased_quantity=10, eta=today
+    )
+    product = aggregate.Product(sku="SMALL-FORK", batches=[batch])
+
+    product.allocate(
+        aggregate.OrderLine(order_id="order1", sku="SMALL-FORK", qty=10)
+    )
+
+    allocation = product.allocate(
+        aggregate.OrderLine(order_id="order2", sku="SMALL-FORK", qty=1)
+    )
+    assert product.events[-1] == events.OutOfStock(sku="SMALL-FORK")
+    assert allocation is None
 
 
 def test_increments_version_number() -> None:

@@ -5,6 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from src.allocation import repositories
+from src.allocation.domain.service import messagebus
 from src.allocation.lib import settings
 
 SessionFactory = Annotated[sessionmaker[Session], sessionmaker]
@@ -27,8 +28,17 @@ class AbstractUnitOfWork(abc.ABC):
     async def __aexit__(self, *args: Any) -> None:
         await self.rollback()
 
-    @abc.abstractmethod
     async def commit(self) -> None:
+        await self._commit()
+
+    async def publish_events(self) -> None:
+        for product in self.products.seen:
+            while product.events:
+                event = product.events.pop(0)
+                messagebus.handle(event)
+
+    @abc.abstractmethod
+    async def _commit(self) -> None:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -52,7 +62,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
         await super().__aexit__(*args)
         self.session.close()
 
-    async def commit(self) -> None:
+    async def _commit(self) -> None:
         self.session.commit()
 
     async def rollback(self) -> None:
@@ -65,7 +75,7 @@ class FakeUnitOfWork(AbstractUnitOfWork):
         self.committed = False
         super().__init__()
 
-    async def commit(self) -> None:
+    async def _commit(self) -> None:
         self.committed = True
 
     async def rollback(self) -> None:
