@@ -1,9 +1,7 @@
-import dataclasses
-from datetime import date
+import datetime
 from typing import List, Optional, Set
 
 import pydantic
-from pydantic.dataclasses import dataclass as pydantic_dataclass
 
 from src.allocation.domain.model import events as domain_events
 from src.allocation.lib import base_types
@@ -13,7 +11,6 @@ class OutOfStockException(Exception):
     """Raise when there's no stock to allocate an order"""
 
 
-@pydantic_dataclass(unsafe_hash=True)
 class OrderLine(base_types.ValueObject):
     """Client order for an specific product
 
@@ -28,7 +25,6 @@ class OrderLine(base_types.ValueObject):
     qty: int = pydantic.Field(..., gt=0)
 
 
-@pydantic_dataclass
 class Batch(base_types.Entity):
     """Batch of stock ordered by the purchasing department
 
@@ -40,20 +36,9 @@ class Batch(base_types.Entity):
     """
 
     sku: str
-    eta: Optional[date]
+    eta: Optional[datetime.date]
     purchased_quantity: int
-    _allocations: Set[OrderLine] = dataclasses.field(
-        init=False, repr=False, default_factory=lambda: set()
-    )
-
-    def __repr__(self) -> str:
-        return super().__repr__()
-
-    def __hash__(self) -> int:
-        return super().__hash__()
-
-    def __eq__(self, other: object) -> bool:
-        return super().__eq__(other=other)
+    _allocations: Set[OrderLine] = pydantic.PrivateAttr(default_factory=set)
 
     def __gt__(self, other: "Batch") -> bool:
         if self.eta is None:
@@ -80,6 +65,18 @@ class Batch(base_types.Entity):
         if line in self._allocations:
             self._allocations.remove(line)
 
+    def can_allocate(self, line: OrderLine) -> bool:
+        """Validates if there are available resources to allocate a new order
+
+        Args:
+            line (OrderLine): Order to allocate on this Batch
+
+        Returns:
+            bool: Returns true when is possible
+            to allocate the order line on this batch
+        """
+        return self.sku == line.sku and self.available_quantity >= line.qty
+
     @property
     def allocated_quantity(self) -> int:
         """Total allocated items on this batch
@@ -98,20 +95,17 @@ class Batch(base_types.Entity):
         """
         return self.purchased_quantity - self.allocated_quantity
 
-    def can_allocate(self, line: OrderLine) -> bool:
-        """Validates if there are available resources to allocate a new order
-
-        Args:
-            line (OrderLine): Order to allocate on this Batch
+    @property
+    def allocations(self) -> Set[OrderLine]:
+        """Read OrderLines allocated on this batch.
 
         Returns:
-            bool: Returns true when is possible
-            to allocate the order line on this batch
+            _allocations (Set[OrderLine]): Collection of order lines
+            allocated on Batch.
         """
-        return self.sku == line.sku and self.available_quantity >= line.qty
+        return self._allocations
 
 
-@pydantic_dataclass(validate_on_init=False)
 class Product(base_types.Aggregate):
     """Client order for an specific product
 
@@ -120,15 +114,8 @@ class Product(base_types.Aggregate):
         batches (List[Batch]): List of order batches associates to the product.
     """
 
-    sku: str
-    batches: List[Batch] = dataclasses.field(default_factory=lambda: list())
-    version_number: int = dataclasses.field(default=0)
-    events: List[domain_events.Event] = dataclasses.field(
-        default_factory=lambda: list()
-    )
-
-    def __hash__(self) -> int:
-        return hash(self.__class__) + hash(self.sku)
+    sku: str = pydantic.Field(primary_key=True)
+    batches: List[Batch] = pydantic.Field(default_factory=list)
 
     def add_batch(self, batch: Batch) -> None:
         self.batches.append(batch)
@@ -158,6 +145,3 @@ class Product(base_types.Aggregate):
         except StopIteration:
             self.events.append(domain_events.OutOfStock(sku=line.sku))
             return None
-
-    def _update_version(self) -> None:
-        self.version_number += 1

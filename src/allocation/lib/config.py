@@ -3,7 +3,6 @@ from contextlib import asynccontextmanager
 import structlog
 from fastapi import FastAPI
 
-from src.allocation.adapters import orm
 from src.allocation.domain.service import unit_of_work
 from src.allocation.lib import settings
 
@@ -17,7 +16,6 @@ def get_default_uow() -> unit_of_work.AbstractUnitOfWork:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await configure_logging()
-    orm.start_mappers()
 
     yield
 
