@@ -1,7 +1,8 @@
-from typing import List, Optional, Set
+from typing import Optional, Set
 
 from sqlalchemy.orm import Session
 
+from src.allocation.adapters import orm
 from src.allocation.domain.model import aggregate
 from src.allocation.repositories.abstract import AbstractRepository
 
@@ -11,14 +12,14 @@ class SqlAlchemyRepository(AbstractRepository):
         self.session = session
         super().__init__()
 
-    def add(self, product: aggregate.Product) -> None:
-        self.session.add(product)
+    def _add(self, product: aggregate.Product) -> None:
+        _new_product = orm.ProductMapper.from_domain(product)
+        self.session.merge(_new_product)
 
-    def get(self, sku: str) -> Optional[aggregate.Product]:
-        return self.session.query(aggregate.Product).filter_by(sku=sku).first()
-
-    def list(self) -> List[aggregate.Product]:
-        return self.session.query(aggregate.Product).all()
+    def _get(self, sku: str) -> Optional[aggregate.Product]:
+        _product = self.session.get(orm.ProductMapper, sku)
+        if _product:
+            return aggregate.Product.from_orm(_product)
 
 
 class FakeRepository(AbstractRepository):
@@ -26,14 +27,11 @@ class FakeRepository(AbstractRepository):
         self._products = set(products)
         super().__init__()
 
-    def add(self, product: aggregate.Product) -> None:
+    def _add(self, product: aggregate.Product) -> None:
         self._products.add(product)
 
-    def get(self, sku: str) -> Optional[aggregate.Product]:
+    def _get(self, sku: str) -> Optional[aggregate.Product]:
         try:
             return next(p for p in self._products if p.sku == sku)
         except StopIteration:
             return None
-
-    def list(self) -> List[aggregate.Product]:
-        return list(self._products)

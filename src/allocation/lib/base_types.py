@@ -1,14 +1,33 @@
+from typing import Any, Callable, List
+
 import pydantic
+import pydash
 
 
-@pydantic.dataclasses.dataclass(unsafe_hash=True)
-class ValueObject:
+class DomainBaseModel(pydantic.BaseModel):
+    class Config(pydantic.BaseConfig):
+        frozen: bool = True
+        orm_mode: bool = True
+        from_attributes: bool = True
+
+    def __hash__(self) -> int:  # pyright: ignore[reportIncompatibleVariableOverride]
+        return hash((type(self),) + tuple(self.__dict__.values()))
+
+
+class Event(pydantic.BaseModel):
     ...
 
 
-@pydantic.dataclasses.dataclass
-class Entity:
+class ValueObject(DomainBaseModel):
+    def __hash__(self) -> int:
+        return super().__hash__()
+
+
+class Entity(DomainBaseModel):
     id: str
+
+    class Config(DomainBaseModel.Config):
+        frozen: bool = False
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.id}>"
@@ -22,6 +41,30 @@ class Entity:
         return other.id == self.id
 
 
-@pydantic.dataclasses.dataclass(unsafe_hash=True)
-class Aggregate:
-    ...
+class Aggregate(DomainBaseModel):
+    version_number: int = pydantic.Field(default=0)
+    events: List[Event] = pydantic.Field(default_factory=list)
+
+    class Config(DomainBaseModel.Config):
+        frozen: bool = False
+
+    def __hash__(self) -> int:
+        _pk = self._get_primary_key()
+        return hash(self.__class__) + hash(_pk)
+
+    def _update_version(self) -> None:
+        self.version_number += 1
+
+    def _get_primary_key(self) -> str:
+        _properties = self.schema().get("properties")
+        assert (
+            _properties is not None
+        ), "Aggregate object must have at least one field"
+
+        _fields: List[str] = _properties.keys()
+        _filter: Callable[[str], bool] = (
+            lambda x: _properties[x].get("primary_key") is True
+        )
+        _pk: Any = pydash.collections.find(_fields, _filter)
+        assert _pk is not None, "Aggregate object must have a primary_key"
+        return _pk

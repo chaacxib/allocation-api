@@ -1,5 +1,5 @@
 import abc
-from typing import List, Optional, Set
+from typing import Optional, Set
 
 from src.allocation.domain.model import aggregate
 
@@ -9,14 +9,20 @@ class AbstractRepository(abc.ABC):
         self.seen: Set[aggregate.Product] = set()
         super().__init__()
 
-    @abc.abstractmethod
     def add(self, product: aggregate.Product) -> None:
-        raise NotImplementedError
+        self._add(product)
+        self.seen.add(product)
 
-    @abc.abstractmethod
     def get(self, sku: str) -> Optional[aggregate.Product]:
+        product = self._get(sku)
+        if product:
+            self.seen.add(product)
+        return product
+
+    @abc.abstractmethod
+    def _add(self, product: aggregate.Product) -> None:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def list(self) -> List[aggregate.Product]:
+    def _get(self, sku: str) -> Optional[aggregate.Product]:
         raise NotImplementedError
