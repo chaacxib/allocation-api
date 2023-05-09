@@ -67,6 +67,7 @@ async def test_uow_can_retrieve_a_batch_and_allocate_to_it(
         product.allocate(
             line=aggregate.OrderLine(order_id="o1", sku="HIPSTER-WORKBENCH", qty=10)
         )
+        uow.products.add(product)
         await uow.commit()
 
     batch_ref = get_allocated_batch_ref(

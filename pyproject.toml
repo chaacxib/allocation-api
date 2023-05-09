@@ -47,12 +47,14 @@ line-length = 85
 pythonVersion = "3.11"
 pythonPlatform = "Linux"
 typeCheckingMode = "strict"
+reportUnknownMemberType = false
 reportMissingSuperCall = true
 reportUnnecessaryTypeIgnoreComment = true
 stubPath = "./.typings"
 
 [tool.ruff]
 line-length = 85
+ignore = ["E731"]
 
 [tool.pytest.ini_options]
 addopts = "--strict-markers"
