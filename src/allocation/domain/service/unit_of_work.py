@@ -1,12 +1,12 @@
 import abc
-from typing import Annotated, Any
+from typing import Annotated, Any, Callable, Iterable, List, Optional, Type
 
+import pydash
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from src.allocation import repositories
-from src.allocation.domain.service import messagebus
-from src.allocation.lib import settings
+from src.allocation.lib import base_types, settings
 
 SessionFactory = Annotated[sessionmaker[Session], sessionmaker]
 
@@ -31,11 +31,10 @@ class AbstractUnitOfWork(abc.ABC):
     async def commit(self) -> None:
         await self._commit()
 
-    async def publish_events(self) -> None:
+    def collect_new_events(self) -> Iterable[base_types.Event]:
         for product in self.products.seen:
             while product.events:
-                event = product.events.pop(0)
-                messagebus.handle(event)
+                yield product.events.pop(0)
 
     @abc.abstractmethod
     async def _commit(self) -> None:
@@ -74,9 +73,30 @@ class FakeUnitOfWork(AbstractUnitOfWork):
         self.products = repositories.FakeRepository(set())
         self.committed = False
         super().__init__()
+        self.events_published: List[base_types.Event] = []
 
     async def _commit(self) -> None:
         self.committed = True
 
     async def rollback(self) -> None:
         ...
+
+    def collect_new_events(self) -> Iterable[base_types.Event]:
+        for product in self.products.seen:
+            while product.events:
+                self.events_published.append(product.events.pop(0))
+        return []
+
+    def assert_event_type_published(
+        self, event_type: Type[base_types.Event]
+    ) -> None:
+        assert self.get_published_event_by_type(event_type) is not None
+
+    def get_published_event_by_type(
+        self, event_type: Type[base_types.Event]
+    ) -> Optional[base_types.Event]:
+        events_filter: Callable[[base_types.Event], bool] = lambda x: isinstance(
+            x, event_type
+        )
+        event: Any = pydash.collections.find(self.events_published, events_filter)
+        return event

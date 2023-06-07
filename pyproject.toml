@@ -55,6 +55,7 @@ stubPath = "./.typings"
 [tool.ruff]
 line-length = 85
 ignore = ["E731"]
+fixable = ["E501"]
 
 [tool.pytest.ini_options]
 addopts = "--strict-markers"

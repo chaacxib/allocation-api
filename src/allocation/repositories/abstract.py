@@ -19,10 +19,20 @@ class AbstractRepository(abc.ABC):
             self.seen.add(product)
         return product
 
+    def get_by_batchref(self, ref: str) -> Optional[aggregate.Product]:
+        product = self._get_by_batchref(ref)
+        if product:
+            self.seen.add(product)
+        return product
+
     @abc.abstractmethod
     def _add(self, product: aggregate.Product) -> None:
         raise NotImplementedError
 
     @abc.abstractmethod
     def _get(self, sku: str) -> Optional[aggregate.Product]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def _get_by_batchref(self, ref: str) -> Optional[aggregate.Product]:
         raise NotImplementedError
