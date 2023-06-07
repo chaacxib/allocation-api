@@ -1,7 +1,8 @@
 import datetime
-from typing import List, Optional, Set
+from typing import Any, List, Optional, Set
 
 import pydantic
+import pydash
 
 from src.allocation.domain.model import events as domain_events
 from src.allocation.lib import base_types
@@ -9,6 +10,10 @@ from src.allocation.lib import base_types
 
 class OutOfStockException(Exception):
     """Raise when there's no stock to allocate an order"""
+
+
+class BatchNotFoundException(Exception):
+    """Raise when the specified batch to obtain doesn't exist"""
 
 
 class OrderLine(base_types.ValueObject):
@@ -64,6 +69,14 @@ class Batch(base_types.Entity):
         """
         if line in self._allocations:
             self._allocations.remove(line)
+
+    def deallocate_one(self) -> OrderLine:
+        """Removes last allocated order from batch
+
+        Returns:
+            line (OrderLine): Order deallocated from this Batch
+        """
+        return self._allocations.pop()
 
     def can_allocate(self, line: OrderLine) -> bool:
         """Validates if there are available resources to allocate a new order
@@ -145,3 +158,23 @@ class Product(base_types.Aggregate):
         except StopIteration:
             self.events.append(domain_events.OutOfStock(sku=line.sku))
             return None
+
+    def change_batch_quantity(self, ref: str, qty: int) -> None:
+        """Update batch purchased quantity
+
+        Args:
+            ref (str): Unique identifier of the batch to update
+            qty (int): New batch purchased quantity
+
+        Raises:
+            BatchNotFoundException: Raise when there's no batch
+            with the provided reference
+        """
+        _batch: Any = pydash.collections.find(self.batches, {"id": ref})
+        if not isinstance(_batch, Batch):
+            raise BatchNotFoundException
+
+        _batch.purchased_quantity = qty
+        while _batch.available_quantity < 0:
+            _line = _batch.deallocate_one()
+            self.events.append(domain_events.AllocationRequired(**_line.dict()))
